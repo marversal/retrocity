@@ -8,8 +8,16 @@ import { GameplayScreen } from './components/GameplayScreen';
 
 type Screen = 'map' | 'gameplay';
 
-// Buildings that launch mini-games when clicked
 const GAME_BUILDINGS = new Set(['UPLINK', 'BLOCKCHAIN', 'JAMMER']);
+
+function loadPlayerCount(): number {
+  try { return parseInt(localStorage.getItem('boxbot_players') || '0', 10); }
+  catch { return 0; }
+}
+function savePlayerCount(n: number) {
+  try { localStorage.setItem('boxbot_players', n.toString()); }
+  catch {}
+}
 
 export default function App() {
   const [screen, setScreen]                     = useState<Screen>('map');
@@ -18,15 +26,19 @@ export default function App() {
   const [activeGame, setActiveGame]             = useState<string | null>(null);
   const [health, setHealth]                     = useState(5);
   const [dogsActive, setDogsActive]             = useState(false);
+  const [playerCount, setPlayerCount]           = useState<number>(loadPlayerCount);
 
   function handleBuildingClick(id: string) {
-    // STACK NODE → mailto link
+    // BUILDER → open Marversal X profile
     if (id === 'STACK_NODE') {
-      window.open('mailto:marversaldcl.eth@gmail.com');
+      window.open('https://x.com/Marversal_eth', '_blank', 'noopener,noreferrer');
       return;
     }
-    // Game buildings → launch embedded game
+    // Game buildings → launch modal + increment persistent player counter
     if (GAME_BUILDINGS.has(id)) {
+      const next = playerCount + 1;
+      setPlayerCount(next);
+      savePlayerCount(next);
       setActiveGame(id);
       setSelectedBuilding(null);
       return;
@@ -39,46 +51,31 @@ export default function App() {
     setHoveredBuilding(id);
   }
 
-  function handlePlay() {
-    setSelectedBuilding(null);
-    setScreen('gameplay');
-  }
-
-  function handleHealthChange(h: number) {
-    setHealth(h);
-  }
-
-  function handleDogsActivated() {
-    setDogsActive(true);
-  }
+  function handleHealthChange(h: number) { setHealth(h); }
+  function handleDogsActivated() { setDogsActive(true); }
 
   return (
-    <div
-      style={{
-        width: '100vw',
-        height: '100vh',
-        background: '#000900',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        fontFamily: '"VT323", monospace',
-        color: '#39FF14',
-      }}
-    >
-      {/* Top terminal bar — always visible */}
-      <TerminalBar dogsActive={dogsActive} health={health} />
+    <div style={{
+      width: '100vw', height: '100vh',
+      background: '#000900',
+      display: 'flex', flexDirection: 'column',
+      overflow: 'hidden',
+      fontFamily: '"VT323", monospace',
+      color: '#39FF14',
+    }}>
+      <TerminalBar
+        dogsActive={dogsActive}
+        health={health}
+        playerCount={playerCount}
+      />
 
-      {/* Main content */}
       <div style={{ flex: 1, display: 'flex', position: 'relative', overflow: 'hidden' }}>
         {screen === 'map' && (
           <>
-            {/* Left info panel — only for non-game buildings */}
             <BuildingPanel
               buildingId={selectedBuilding}
               onClose={() => setSelectedBuilding(null)}
             />
-
-            {/* Isometric city map */}
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
               <IsometricCity
                 selectedBuilding={selectedBuilding}
@@ -98,15 +95,10 @@ export default function App() {
         )}
       </div>
 
-      {/* Mini-game modal (UPLINK / BLOCKCHAIN / JAMMER) */}
       {activeGame && (
-        <GameModal
-          gameId={activeGame}
-          onClose={() => setActiveGame(null)}
-        />
+        <GameModal gameId={activeGame} onClose={() => setActiveGame(null)} />
       )}
 
-      {/* CRT overlay — always on top */}
       <CRTOverlay />
     </div>
   );

@@ -1,7 +1,7 @@
 
-  # retrocity
+  # RETROCITY
 
-  Engage in a retro 2D pixel art platformer games dedicated to Nolan B.
+  This is a code bundle for RETROCITY. The original project is available at https://www.figma.com/design/EuROikej6u8yeba9HiZAqt/RETROCITY.
 
   ## Running the code
 
